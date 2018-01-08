@@ -1,7 +1,6 @@
 package com.sundy.ta.analysis;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,22 +39,17 @@ public class CommonSpider {
 	}
 	
 	private class MyPageProcessor implements PageProcessor {
-
 		private Site site = Site.me().setRetryTimes(3).setSleepTime(100);
-		
 		@Override
 		public void process(Page page) {
-			System.out.println(page.getUrl());
-//			List<String> urls = page.getHtml().regex("(http(?=|s)://([a-zA-Z0-9-]{1,62}\\.){0,}([a-zA-Z0-9-]{0,}ebay[a-zA-Z0-9-]{0,}\\.)([a-zA-Z0-9-]{1,62}\\.){0,}([a-zA-Z0-9-]{1,62})(/[a-zA-Z0-9-.?]*){0,})").all();
 			List<String> urls = page.getHtml().links().all();
 			for(String url : urls) {
-				if(url.contains(site.getDomain())) {
-					page.addTargetRequest(new Request(url));
-					System.out.println(url);
-				}
+				System.out.println(url);
+//				if(url.contains(site.getDomain())) {
+//					page.addTargetRequest(new Request(url));
+//				}
 			}
 		}
-
 		@Override
 		public Site getSite() {
 			return site;

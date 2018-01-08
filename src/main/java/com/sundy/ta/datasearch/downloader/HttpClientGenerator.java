@@ -102,7 +102,7 @@ public class HttpClientGenerator {
 		if(site.getUserAgent() != null) {
 			httpClientBuilder.setUserAgent(site.getUserAgent());
 		} else {
-			httpClientBuilder.setUserAgent("");
+			httpClientBuilder.setUserAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36");
 		}
 		
 		if (site.isUseGzip()) {

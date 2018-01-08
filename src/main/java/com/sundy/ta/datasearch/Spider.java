@@ -37,7 +37,7 @@ public class Spider implements Runnable, Task {
 	
 	private Downloader downloader;
 	
-	private List<PageProcessor> pageProcessors = new ArrayList<PageProcessor>();
+	private PageProcessor pageProcessor;
 	
 	private Scheduler scheduler;
 	
@@ -76,8 +76,8 @@ public class Spider implements Runnable, Task {
 		return this;
 	}
 	
-	public Spider addPageProcessor(PageProcessor pageProcessor) {
-		pageProcessors.add(pageProcessor);
+	public Spider setPageProcessor(PageProcessor pageProcessor) {
+		this.pageProcessor = pageProcessor;
 		this.site = pageProcessor.getSite();
 		return this;
 	}
@@ -89,6 +89,13 @@ public class Spider implements Runnable, Task {
 	
 	public Spider addUrl(String url) {
 		this.initRequest.add(new Request(url));
+		return this;
+	}
+	
+	public Spider addUrls(List<String> urls) {
+		for (String url : urls) {
+			this.initRequest.add(new Request(url));
+		}
 		return this;
 	}
 	
@@ -226,15 +233,13 @@ public class Spider implements Runnable, Task {
 
 	private void downloadSuccess(Request request, Page page) {
 		if(site.getAcceptStatCode().contains(page.getStatusCode())) {
-			for (PageProcessor pageProcessor : pageProcessors) {
-				pageProcessor.process(page);
-				extractAndAddRequests(page);
-				if (!page.getResultItems().isSkip()) {
-	                for (Pipeline pipeline : pipelines) {
-	                    pipeline.process(page.getResultItems(), this);
-	                }
-	            }
-			}
+			pageProcessor.process(page);
+			extractAndAddRequests(page);
+			if (!page.getResultItems().isSkip()) {
+                for (Pipeline pipeline : pipelines) {
+                    pipeline.process(page.getResultItems(), this);
+                }
+            }
 		}
 		
 	}

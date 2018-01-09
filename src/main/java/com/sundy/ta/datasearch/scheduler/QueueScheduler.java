@@ -24,8 +24,8 @@ public class QueueScheduler extends DuplicateRemovedScheduler {
 
 	@Override
 	public Request poll(Task task) {
-		if(requests.containsKey(task.getUUID())) {
-			Request request = requests.get(task.getUUID()).poll();
+		if(requests.containsKey(task.getTaskName())) {
+			Request request = requests.get(task.getTaskName()).poll();
 			if (request!=null) {
 				count.decrementAndGet();
 				return request;
@@ -41,12 +41,12 @@ public class QueueScheduler extends DuplicateRemovedScheduler {
 
 	@Override
 	protected void pushWhenNoDuplicate(Request request, Task task) {
-		if(requests.containsKey(task.getUUID())) {
-			requests.get(task.getUUID()).add(request);
+		if(requests.containsKey(task.getTaskName())) {
+			requests.get(task.getTaskName()).add(request);
 		} else {
 			ConcurrentLinkedQueue<Request> queue = new ConcurrentLinkedQueue<Request>();
 			queue.add(request);
-			requests.put(task.getUUID(), queue);
+			requests.put(task.getTaskName(), queue);
 		}
 		count.incrementAndGet();
 	}

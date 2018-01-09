@@ -74,18 +74,18 @@ public class HttpClientDownloader implements Downloader {
     }
 
     @Override
-    public Page download(Request request, Task task) {
-        if (task == null || task.getSite() == null) {
+    public Page download(Request request) {
+        if (request == null || request.getSite() == null) {
             throw new NullPointerException("task or site can not be null");
         }
         CloseableHttpResponse httpResponse = null;
-        CloseableHttpClient httpClient = getHttpClient(task.getSite());
-        Proxy proxy = proxyProvider != null ? proxyProvider.getProxy(task) : null;
-        HttpClientRequestContext requestContext = httpUriRequestConverter.convert(request, task.getSite(), proxy);
+        CloseableHttpClient httpClient = getHttpClient(request.getSite());
+        Proxy proxy = proxyProvider != null ? proxyProvider.getProxy(request) : null;
+        HttpClientRequestContext requestContext = httpUriRequestConverter.convert(request, request.getSite(), proxy);
         Page page = Page.fail();
         try {
             httpResponse = httpClient.execute(requestContext.getHttpUriRequest(), requestContext.getHttpClientContext());
-            page = handleResponse(request, request.getCharset() != null ? request.getCharset() : task.getSite().getCharset(), httpResponse, task);
+            page = handleResponse(request, request.getCharset() != null ? request.getCharset() : request.getSite().getCharset(), httpResponse);
             onSuccess(request);
             logger.info("downloading page success {}", request.getUrl());
             return page;
@@ -106,7 +106,7 @@ public class HttpClientDownloader implements Downloader {
         httpClientGenerator.setPoolSize(thread);
     }
 
-    protected Page handleResponse(Request request, String charset, HttpResponse httpResponse, Task task) throws IOException {
+    protected Page handleResponse(Request request, String charset, HttpResponse httpResponse) throws IOException {
         byte[] bytes = IOUtils.toByteArray(httpResponse.getEntity().getContent());
         String contentType = httpResponse.getEntity().getContentType() == null ? "" : httpResponse.getEntity().getContentType().getValue();
         Page page = new Page();

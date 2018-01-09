@@ -3,7 +3,6 @@ package com.sundy.ta.datasearch;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,27 +16,20 @@ import com.sundy.ta.datasearch.downloader.Downloader;
 import com.sundy.ta.datasearch.downloader.HttpClientDownloader;
 import com.sundy.ta.datasearch.model.Page;
 import com.sundy.ta.datasearch.model.Request;
-import com.sundy.ta.datasearch.model.Site;
-import com.sundy.ta.datasearch.pageprocessor.EbayPageProcessor;
 import com.sundy.ta.datasearch.pageprocessor.PageProcessor;
 import com.sundy.ta.datasearch.pipeline.ConsolePipeline;
 import com.sundy.ta.datasearch.pipeline.Pipeline;
 import com.sundy.ta.datasearch.scheduler.QueueScheduler;
 import com.sundy.ta.datasearch.scheduler.Scheduler;
 import com.sundy.ta.datasearch.thread.CountableThreadPool;
-import com.sundy.ta.datasearch.utils.UrlUtils;
 
 public class Spider implements Runnable, Task {
 	
 	private final static Logger logger = LoggerFactory.getLogger(Spider.class);
 
-	private String uuid;
-	
-	private Site site;
-	
 	private Downloader downloader;
 	
-	private PageProcessor pageProcessor;
+	private List<PageProcessor> pageProcessors = new ArrayList<PageProcessor>();
 	
 	private Scheduler scheduler;
 	
@@ -61,6 +53,15 @@ public class Spider implements Runnable, Task {
 	
 	private final AtomicLong pageCount = new AtomicLong(0);
 	
+	private final String taskName;
+	
+	private final String domain;
+	
+	private Spider(String taskName, String domain) {
+		this.taskName = taskName;
+		this.domain = domain;
+	}
+
 	public Spider thread(int threadNum) {
 		this.threadNum = threadNum;
 		return this;
@@ -76,9 +77,8 @@ public class Spider implements Runnable, Task {
 		return this;
 	}
 	
-	public Spider setPageProcessor(PageProcessor pageProcessor) {
-		this.pageProcessor = pageProcessor;
-		this.site = pageProcessor.getSite();
+	public Spider addPageProcessor(PageProcessor pageProcessor) {
+		this.pageProcessors.add(pageProcessor);
 		return this;
 	}
 	
@@ -108,24 +108,6 @@ public class Spider implements Runnable, Task {
 		return startDate;
 	}
 
-	@Override
-	public String getUUID() {
-		if(uuid!=null) {
-			return uuid;
-		}
-		if(site!=null) {
-			return site.getDomain();
-		}
-		uuid = UUID.randomUUID().toString();
-		return uuid;
-	}
-
-	@Override
-	public Site getSite() {
-		return site;
-	}
-	
-	
 	public void initComponent() {
 		if(downloader==null) {
 			downloader = new HttpClientDownloader();
@@ -158,7 +140,7 @@ public class Spider implements Runnable, Task {
 	public void run() {
 		checkIfRunning();
 		initComponent();
-		logger.info("Spider {} started!",getUUID());
+		logger.info("Spider {} started!",getTaskName());
 		while(!Thread.currentThread().isInterrupted() && this.state.getCode()==Constant.State.RUNNING.getCode()) {
 			final Request request = scheduler.poll(this);
 			if(request==null) {
@@ -183,7 +165,7 @@ public class Spider implements Runnable, Task {
 		close();
 	}
 	
-	private void close() {
+	public void close() {
 		this.state = Constant.State.STOP;
 		threadPool.shutdown();
 	}
@@ -196,7 +178,7 @@ public class Spider implements Runnable, Task {
 	
 	
 	private void processRequest(Request request) {
-		Page page = downloader.download(request, this);
+		Page page = downloader.download(request);
 		if(page.isDownloadSuccess()) {
 			downloadSuccess(request, page);
 		} else {
@@ -205,8 +187,8 @@ public class Spider implements Runnable, Task {
 	}
 	
 	private void downloadError(Request request) {
-		if (site.getCycleRetryTimes() == 0) {
-            sleep(site.getSleepTime());
+		if (request.getSite().getCycleRetryTimes() == 0) {
+            sleep(request.getSite().getSleepTime());
         } else {
             // for cycle retry
             doCycleRetry(request);
@@ -222,18 +204,20 @@ public class Spider implements Runnable, Task {
         } else {
             int cycleTriedTimes = (Integer) cycleTriedTimesObject;
             cycleTriedTimes++;
-            if (cycleTriedTimes < site.getCycleRetryTimes()) {
+            if (cycleTriedTimes < request.getSite().getCycleRetryTimes()) {
             	Request cloneRequest = SerializationUtils.clone(request);
             	cloneRequest.setPriority(0).getExtras().put(Request.CYCLE_TRIED_TIMES, cycleTriedTimes);
                 addRequest(cloneRequest);
             }
         }
-        sleep(site.getRetrySleepTime());
+        sleep(request.getSite().getRetrySleepTime());
     }
 
 	private void downloadSuccess(Request request, Page page) {
-		if(site.getAcceptStatCode().contains(page.getStatusCode())) {
-			pageProcessor.process(page);
+		if(request.getSite().getAcceptStatCode().contains(page.getStatusCode())) {
+			for (PageProcessor pageProcessor : pageProcessors) {
+				pageProcessor.process(page);
+			}
 			extractAndAddRequests(page);
 			if (!page.getResultItems().isSkip()) {
                 for (Pipeline pipeline : pipelines) {
@@ -263,22 +247,24 @@ public class Spider implements Runnable, Task {
 	}
 	
 	private void addRequest(Request request) {
-		if (site.getDomain() == null && request != null && request.getUrl() != null) {
-            site.setDomain(UrlUtils.getDomain(request.getUrl()));
-        }
-		scheduler.push(request, this);
-		signalNewUrl();
+		if(domain==null || (domain!=null && request.getDomain().equals(domain))) {
+			scheduler.push(request, this);
+			signalNewUrl();
+		}
+		
 	}
 	
-	
 	private void addRequests(List<Request> requests) {
+		boolean hasNewUrl = false;
 		for (Request request : requests) {
-			if (site.getDomain() == null && request != null && request.getUrl() != null) {
-	            site.setDomain(UrlUtils.getDomain(request.getUrl()));
-	        }
-			scheduler.push(request, this);
+			if(domain==null || (domain!=null && request.getDomain().equals(domain))) {
+				scheduler.push(request, this);
+				hasNewUrl = true;
+			}
 		}
-		signalNewUrl();
+		if(hasNewUrl) {
+			signalNewUrl();
+		}
 	}
 
 	private void waitNewUrl() {
@@ -311,9 +297,19 @@ public class Spider implements Runnable, Task {
 		}
 	}
 
-	public static Spider create() {
-		Spider spider = new Spider();
+	public static Spider create(String taskName, String domain) {
+		Spider spider = new Spider(taskName, domain);
 		return spider;
 	}
 
+	@Override
+	public String getTaskName() {
+		return taskName;
+	}
+
+	@Override
+	public String getDomain() {
+		return domain;
+	}
+	
 }

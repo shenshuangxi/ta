@@ -2,6 +2,7 @@ package com.sundy.ta.datasearch.proxy;
 
 import com.sundy.ta.datasearch.Task;
 import com.sundy.ta.datasearch.model.Page;
+import com.sundy.ta.datasearch.model.Request;
 
 /**
  * Proxy provider. <br>
@@ -15,15 +16,15 @@ public interface ProxyProvider {
      * Return proxy to Provider when complete a download.
      * @param proxy the proxy config contains host,port and identify info
      * @param page the download result
-     * @param task the download task
+     * @param request the download request
      */
-    void returnProxy(Proxy proxy, Page page, Task task);
+    void returnProxy(Proxy proxy, Page page, Request request);
 
     /**
      * Get a proxy for task by some strategy.
-     * @param task the download task
+     * @param request the download request
      * @return proxy 
      */
-    Proxy getProxy(Task task);
+    Proxy getProxy(Request request);
     
 }

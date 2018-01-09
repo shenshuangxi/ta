@@ -1,7 +1,5 @@
 package com.sundy.ta.datasearch;
 
-import com.sundy.ta.datasearch.model.Site;
-
 public interface Task {
 
 	/**
@@ -9,13 +7,8 @@ public interface Task {
      *
      * @return uuid
      */
-    public String getUUID();
+    public String getTaskName();
+    
+    public String getDomain();
 
-    /**
-     * site of a task
-     *
-     * @return site
-     */
-    public Site getSite();
-	
 }

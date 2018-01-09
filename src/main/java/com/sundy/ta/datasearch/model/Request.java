@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sundy.ta.datasearch.utils.UrlUtils;
+
 import lombok.Data;
 
 @Data
@@ -31,10 +33,21 @@ public class Request implements Serializable {
     
     private boolean binaryContent;
     
-    public Request() {
-    }
+    private Site site;
+    
+    private String domain;
 
     public Request(String url) {
+    	this.site = Site.me();
+        site.setDomain(UrlUtils.getDomain(url));
+        this.domain = site.getDomain();
+        this.url = url;
+    }
+    
+    public Request(String url, Site site) {
+    	this.site = site;
+        site.setDomain(UrlUtils.getDomain(url));
+        this.domain = site.getDomain();
         this.url = url;
     }
     

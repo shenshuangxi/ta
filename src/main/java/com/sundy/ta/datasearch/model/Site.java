@@ -1,5 +1,6 @@
 package com.sundy.ta.datasearch.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -14,7 +15,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class Site {
+public class Site implements Serializable {
+
+	private static final long serialVersionUID = -1896517888658190562L;
 
 	private String userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
 	
@@ -109,24 +112,4 @@ public class Site {
 		return this;
 	}
 	
-	public Task toTask() {
-        return new Task() {
-            @Override
-            public String getUUID() {
-                String uuid = Site.this.getDomain();
-                if (uuid == null) {
-                    uuid = UUID.randomUUID().toString();
-                }
-                return uuid;
-            }
-            @Override
-            public Site getSite() {
-                return Site.this;
-            }
-        };
-    }
-
-	
-	
-
 }

@@ -2,10 +2,23 @@ package com.sundy.ta.datasearch.selector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+
 
 public abstract class AbstractSelectable implements Selectable {
 
 	protected abstract List<String> getSourceTexts();
+	
+	@Override
+    public Selectable css(String selector) {
+        return $(selector);
+    }
+
+    @Override
+    public Selectable css(String selector, String attrName) {
+        return $(selector, attrName);
+    }
+	
 	
 	@Override
 	public Selectable regex(String regex) {
@@ -61,5 +74,6 @@ public abstract class AbstractSelectable implements Selectable {
             return null;
         }
 	}
+
 
 }

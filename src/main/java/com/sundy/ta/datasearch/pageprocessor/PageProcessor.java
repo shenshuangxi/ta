@@ -7,6 +7,4 @@ public interface PageProcessor {
 
 	public void process(Page page);
 	
-	public Site getSite();
-	
 }

@@ -3,6 +3,7 @@ package com.sundy.ta.datasearch.selector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Function;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,6 +22,18 @@ public class HtmlNode extends AbstractSelectable {
 
     protected List<Element> getElements() {
         return elements;
+    }
+    
+    @Override
+    public Selectable $(String selector) {
+        CssSelector cssSelector = new CssSelector(selector);
+        return selectElements(cssSelector);
+    }
+
+    @Override
+    public Selectable $(String selector, String attrName) {
+        CssSelector cssSelector = new CssSelector(selector, attrName);
+        return selectElements(cssSelector);
     }
     
     @Override
@@ -69,6 +82,7 @@ public class HtmlNode extends AbstractSelectable {
         return selectList(selector);
     }
 	
+    @Override
     public List<Selectable> nodes() {
         List<Selectable> selectables = new ArrayList<Selectable>();
         for (Element element : getElements()) {

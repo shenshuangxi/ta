@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sundy.ta.datasearch.Task;
 import com.sundy.ta.datasearch.model.Page;
+import com.sundy.ta.datasearch.model.Request;
 
 /**
  * A simple ProxyProvider. Provide proxy as round-robin without heartbeat and error check. It can be used when all proxies are stable.
@@ -39,12 +40,12 @@ public class SimpleProxyProvider implements ProxyProvider {
     }
 
     @Override
-    public void returnProxy(Proxy proxy, Page page, Task task) {
+    public void returnProxy(Proxy proxy, Page page, Request request) {
         //Donothing
     }
 
     @Override
-    public Proxy getProxy(Task task) {
+    public Proxy getProxy(Request request) {
         return proxies.get(incrForLoop());
     }
 

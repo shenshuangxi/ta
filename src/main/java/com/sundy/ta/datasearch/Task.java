@@ -9,6 +9,4 @@ public interface Task {
      */
     public String getTaskName();
     
-    public String getDomain();
-
 }

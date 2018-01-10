@@ -59,32 +59,24 @@ public class Page {
         return targetRequests;
     }
 
-    public void addTargetRequests(List<String> requests) {
-        for (String s : requests) {
-            if (StringUtils.isBlank(s) || s.equals("#") || s.startsWith("javascript:")) {
+    public void addTargetRequests(List<Request> requests) {
+        for (Request request : requests) {
+            if (StringUtils.isBlank(request.getUrl()) || request.getUrl().equals("#") || request.getUrl().startsWith("javascript:")) {
                 continue;
             }
-            s = UrlUtils.canonicalizeUrl(s, url.toString());
-            targetRequests.add(new Request(s));
+            request.setUrl(UrlUtils.canonicalizeUrl(request.getUrl(), url.toString()));
+            targetRequests.add(request);
         }
     }
 
-    public void addTargetRequests(List<String> requests, long priority) {
-        for (String s : requests) {
-            if (StringUtils.isBlank(s) || s.equals("#") || s.startsWith("javascript:")) {
+    public void addTargetRequests(List<Request> requests, long priority) {
+    	for (Request request : requests) {
+            if (StringUtils.isBlank(request.getUrl()) || request.getUrl().equals("#") || request.getUrl().startsWith("javascript:")) {
                 continue;
             }
-            s = UrlUtils.canonicalizeUrl(s, url.toString());
-            targetRequests.add(new Request(s).setPriority(priority));
+            request.setUrl(UrlUtils.canonicalizeUrl(request.getUrl(), url.toString()));
+            targetRequests.add(request.setPriority(priority));
         }
-    }
-
-    public void addTargetRequest(String requestString) {
-        if (StringUtils.isBlank(requestString) || requestString.equals("#")) {
-            return;
-        }
-        requestString = UrlUtils.canonicalizeUrl(requestString, url.toString());
-        targetRequests.add(new Request(requestString));
     }
 
     public void addTargetRequest(Request request) {

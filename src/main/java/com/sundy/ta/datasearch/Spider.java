@@ -35,7 +35,7 @@ public class Spider implements Runnable, Task {
 	
 	private List<Pipeline> pipelines = new ArrayList<Pipeline>();
 	
-	private List<Request> initRequest = new ArrayList<Request>();
+	private Request initRequest;
 	
 	private List<SpiderListener> spiderListeners = new ArrayList<SpiderListener>();
 	
@@ -55,11 +55,8 @@ public class Spider implements Runnable, Task {
 	
 	private final String taskName;
 	
-	private final String domain;
-	
 	private Spider(String taskName, String domain) {
 		this.taskName = taskName;
-		this.domain = domain;
 	}
 
 	public Spider thread(int threadNum) {
@@ -87,15 +84,8 @@ public class Spider implements Runnable, Task {
 		return this;
 	}
 	
-	public Spider addUrl(String url) {
-		this.initRequest.add(new Request(url));
-		return this;
-	}
-	
-	public Spider addUrls(List<String> urls) {
-		for (String url : urls) {
-			this.initRequest.add(new Request(url));
-		}
+	public Spider setRequest(Request request) {
+		this.initRequest = request;
 		return this;
 	}
 	
@@ -127,11 +117,8 @@ public class Spider implements Runnable, Task {
 			threadPool = new CountableThreadPool(threadNum);
 		}
 
-		if(!initRequest.isEmpty()) {
-			for (Request request : initRequest) {
-				addRequest(request);
-			}
-			initRequest.clear();
+		if(initRequest != null) {
+			addRequest(initRequest);
 		}
 		startDate = new Date();
 	}
@@ -247,20 +234,15 @@ public class Spider implements Runnable, Task {
 	}
 	
 	private void addRequest(Request request) {
-		if(domain==null || (domain!=null && request.getDomain().equals(domain))) {
-			scheduler.push(request, this);
-			signalNewUrl();
-		}
-		
+		scheduler.push(request, this);
+		signalNewUrl();
 	}
 	
 	private void addRequests(List<Request> requests) {
 		boolean hasNewUrl = false;
 		for (Request request : requests) {
-			if(domain==null || (domain!=null && request.getDomain().equals(domain))) {
-				scheduler.push(request, this);
-				hasNewUrl = true;
-			}
+			scheduler.push(request, this);
+			hasNewUrl = true;
 		}
 		if(hasNewUrl) {
 			signalNewUrl();
@@ -307,9 +289,4 @@ public class Spider implements Runnable, Task {
 		return taskName;
 	}
 
-	@Override
-	public String getDomain() {
-		return domain;
-	}
-	
 }

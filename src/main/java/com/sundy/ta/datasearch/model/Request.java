@@ -16,7 +16,7 @@ public class Request implements Serializable {
 	public static final String CYCLE_TRIED_TIMES = "_cycle_tried_times";
 
     private String url;
-
+    
     private String method;
 
     private HttpRequestBody requestBody;
@@ -33,21 +33,25 @@ public class Request implements Serializable {
     
     private boolean binaryContent;
     
-    private Site site;
+    private final Site site;
     
-    private String domain;
-
-    public Request(String url) {
+    private final String domain;
+    
+    private final String navgator;
+    
+    public Request(String url, String navgator) {
     	this.site = Site.me();
         site.setDomain(UrlUtils.getDomain(url));
         this.domain = site.getDomain();
+        this.navgator = navgator;
         this.url = url;
     }
     
-    public Request(String url, Site site) {
+    public Request(String url, String navgator, Site site) {
     	this.site = site;
         site.setDomain(UrlUtils.getDomain(url));
         this.domain = site.getDomain();
+        this.navgator = navgator;
         this.url = url;
     }
     

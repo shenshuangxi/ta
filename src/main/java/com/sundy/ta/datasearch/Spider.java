@@ -164,6 +164,10 @@ public class Spider implements Runnable, Task {
 	}
 	
 	
+	private static long startTime = System.currentTimeMillis(); 
+	private static long endTime = System.currentTimeMillis();
+	private AtomicLong pagesDownloaders = new AtomicLong();
+	
 	private void processRequest(Request request) {
 		Page page = downloader.download(request);
 		if(page.isDownloadSuccess()) {
@@ -171,6 +175,9 @@ public class Spider implements Runnable, Task {
 		} else {
 			downloadError(request);
 		}
+		pagesDownloaders.incrementAndGet();
+		endTime = System.currentTimeMillis();
+		logger.error("耗时: "+(endTime-startTime)+"ms 下载页面: "+ pagesDownloaders.get());
 	}
 	
 	private void downloadError(Request request) {

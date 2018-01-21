@@ -108,26 +108,26 @@ public class CommonSpider {
 			Selectable selectable = page.getHtml().css("div#CenterPanelInner");
 			String listCounts = selectable.css("#brcnt span.listingscnt","allText").get();
 			if(listCounts!=null && !listCounts.trim().equals("")) {
-				System.out.println(listCounts);
 				List<Selectable> viewSelectables = selectable.css("#ResultSetItems > #ListViewInner > li[class=sresult lvresult clearfix li]").nodes();
-				for (Selectable viewSelectable : viewSelectables) {
-					Selectable imgLinks = viewSelectable.css("div[class=lvpic pic img left] > div[class=lvpicinner full-width picW] > a[href]");
-					System.out.println(imgLinks);
-					try {
-						String url = imgLinks.css("a[href]").links().all().get(0);
-						String title = imgLinks.css("a[href] > img","alt").all().get(0);
-						String key = StringEscapeUtils.unescapeHtml4(url);
-						String value = StringEscapeUtils.unescapeHtml4(title);
-						page.addTargetRequest(new Request(key, value, Site.me().setRetryTimes(3).setSleepTime(100)));
-					} catch (Exception e) {
-						e.printStackTrace();
+				if(viewSelectables!=null && !viewSelectables.isEmpty()) {
+					for (Selectable viewSelectable : viewSelectables) {
+						Selectable imgLinks = viewSelectable.css("div[class=lvpic pic img left] > div[class=lvpicinner full-width picW] > a[href]");
+						try {
+							String url = imgLinks.css("a[href]").links().all().get(0);
+							String title = imgLinks.css("a[href] > img","alt").all().get(0);
+							String key = StringEscapeUtils.unescapeHtml4(url);
+							String value = StringEscapeUtils.unescapeHtml4(title);
+							page.addTargetRequest(new Request(key, value, Site.me().setRetryTimes(3).setSleepTime(100)));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
+					//翻页
+					Selectable nextPageSelectable = selectable.css("#PaginationAndExpansionsContainer #pgCtrlTbl #Pagination  td[class=pagn-next]  a[class=gspr next]");
+					String key = StringEscapeUtils.unescapeHtml4(nextPageSelectable.links().get());
+					String value = page.getRequest().getNavgator();
+					page.addTargetRequest(new Request(key, value, Site.me().setRetryTimes(3).setSleepTime(100)));
 				}
-				//翻页
-				Selectable nextPageSelectable = selectable.css("#PaginationAndExpansionsContainer #pgCtrlTbl #Pagination  td[class=pagn-next]  a[class=gspr next]");
-				String key = StringEscapeUtils.unescapeHtml4(nextPageSelectable.links().get());
-				String value = page.getRequest().getNavgator();
-				page.addTargetRequest(new Request(key, value, Site.me().setRetryTimes(3).setSleepTime(100)));
 			}
 		}
 	}
@@ -181,7 +181,9 @@ public class CommonSpider {
 	private class ESPipeline implements Pipeline {
 		@Override
 		public void process(ResultItems resultItems, Task task) {
-			
+			for (Entry<String, Object> resultItem : resultItems.getAll().entrySet()) {
+				System.out.println(resultItem.getKey()+"---"+resultItem.getValue());
+			}
 			
 		}
 	} 
@@ -191,21 +193,23 @@ public class CommonSpider {
 	
 	
 	public void start(){
+		System.out.println(4*Runtime.getRuntime().availableProcessors());
 		for(String url : rootSites.values()){
 			Spider.create(UrlUtils.getDomain(url), UrlUtils.getDomain(url)).
 			addPageProcessor(new FirstPageProcessor()).
 			addPageProcessor(new FirstSecondPageProcessor()).
 			addPageProcessor(new SecondPageProcessor()).
 			addPageProcessor(new ThirdPageProcessor()).
-			setRequest(new Request(url, "index")).thread(1).run();
+			addPipeLine(new ESPipeline()).
+			setRequest(new Request(url, "index")).thread(2*4*Runtime.getRuntime().availableProcessors()).run();
 		}
 	}
 	
 	
 	
 	public static void main(String[] args) {
-//		CommonSpider commonSpider = new CommonSpider();
-//		commonSpider.start();
+		CommonSpider commonSpider = new CommonSpider();
+		commonSpider.start();
 		
 		BufferedReader br =null;
 		try {

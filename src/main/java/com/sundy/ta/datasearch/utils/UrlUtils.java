@@ -58,10 +58,15 @@ public class UrlUtils {
         return host;
     }
 
-    private static Pattern patternForProtocal = Pattern.compile("[\\w]+://");
+    private static Pattern patternForProtocal = Pattern.compile("http(?=|s)://");
 
     public static String removeProtocol(String url) {
-        return patternForProtocal.matcher(url).replaceAll("");
+        try {
+			return patternForProtocal.matcher(url).replaceAll("");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
     }
 
     public static String getDomain(String url) {

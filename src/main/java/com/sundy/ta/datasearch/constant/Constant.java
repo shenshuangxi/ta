@@ -1,7 +1,10 @@
 package com.sundy.ta.datasearch.constant;
 
+import lombok.Getter;
+
 public interface Constant {
 
+	
 	public static enum StatusCode {
 		OK(200);
 		

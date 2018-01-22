@@ -14,20 +14,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Properties;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sundy.ta.analysis.utils.HttpProxyGenenrator;
 import com.sundy.ta.datasearch.Spider;
 import com.sundy.ta.datasearch.Task;
+import com.sundy.ta.datasearch.downloader.HttpClientDownloader;
 import com.sundy.ta.datasearch.model.Page;
 import com.sundy.ta.datasearch.model.Request;
 import com.sundy.ta.datasearch.model.ResultItems;
 import com.sundy.ta.datasearch.model.Site;
 import com.sundy.ta.datasearch.pageprocessor.PageProcessor;
 import com.sundy.ta.datasearch.pipeline.Pipeline;
+import com.sundy.ta.datasearch.proxy.Proxy;
+import com.sundy.ta.datasearch.proxy.ProxyProvider;
 import com.sundy.ta.datasearch.selector.Selectable;
 import com.sundy.ta.datasearch.utils.UrlUtils;
 
@@ -189,11 +194,24 @@ public class CommonSpider {
 	} 
 	
 	
+	private class MyProxyProvider implements ProxyProvider {
+
+		@Override
+		public void returnProxy(Proxy proxy, Page page, Request request) {
+		}
+
+		@Override
+		public Proxy getProxy(Request request) {
+			return HttpProxyGenenrator.getGenenrator().getProxy(request);
+		}
+		
+	}
 	
 	
 	
 	public void start(){
-		System.out.println(4*Runtime.getRuntime().availableProcessors());
+		HttpClientDownloader httpClientDownloader = new HttpClientDownloader();
+		httpClientDownloader.setProxyProvider(new MyProxyProvider());
 		for(String url : rootSites.values()){
 			Spider.create(UrlUtils.getDomain(url), UrlUtils.getDomain(url)).
 			addPageProcessor(new FirstPageProcessor()).
@@ -201,7 +219,8 @@ public class CommonSpider {
 			addPageProcessor(new SecondPageProcessor()).
 			addPageProcessor(new ThirdPageProcessor()).
 			addPipeLine(new ESPipeline()).
-			setRequest(new Request(url, "index")).thread(2*4*Runtime.getRuntime().availableProcessors()).run();
+			setDownloader(httpClientDownloader).
+			setRequest(new Request(url, "index")).thread(1).run();
 		}
 	}
 	

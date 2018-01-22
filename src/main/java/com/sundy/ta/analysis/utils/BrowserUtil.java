@@ -3,9 +3,7 @@ package com.sundy.ta.analysis.utils;
 import java.io.File;
 import java.io.IOException;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -58,10 +56,8 @@ public class BrowserUtil {
 			return page;
 		} catch (Throwable e) {
 			e.printStackTrace();
-		} finally {
-			driver.quit();
 		}
-		 return null;
+		return null;
 	}
 	
 }

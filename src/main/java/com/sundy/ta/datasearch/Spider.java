@@ -155,6 +155,7 @@ public class Spider implements Runnable, Task {
 	public void close() {
 		this.state = Constant.State.STOP;
 		threadPool.shutdown();
+		signalNewUrl();
 	}
 
 	private void onError(Request request) {
